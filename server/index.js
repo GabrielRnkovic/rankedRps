@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -72,10 +74,8 @@ mongoose.connect(process.env.MONGODB_URI, {
     console.log('Database name:', connection.name);
     console.log('Host:', connection.host);
     console.log('Port:', connection.port);
-    console.log('Connected to cluster:', connection.client.options.appName);
 }).catch(err => {
     console.error('MongoDB connection error:', err);
-    console.error('Connection string used:', mongoose.connection.client.s.url);
 });
 
 // Add connection error handling
