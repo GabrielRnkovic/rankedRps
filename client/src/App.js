@@ -8,19 +8,23 @@ import Shop from './Shop';
 import { verifyToken } from './utils/auth';
 
 const socket = io(process.env.REACT_APP_API_URL, {
-  withCredentials: true,
-  transports: ['websocket', 'polling'],
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  reconnectionAttempts: 5,
-  autoConnect: true
+    withCredentials: false, // Change this to false
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    autoConnect: true,
+    path: '/socket.io/'
 });
 
-// Add connection error logging
+// Add better error handling
 socket.on('connect_error', (error) => {
-  console.error('Socket connection error:', error);
-  console.log('Connection URL:', process.env.REACT_APP_API_URL);
+    console.error('Socket connection error:', error);
+    console.log('Connection URL:', process.env.REACT_APP_API_URL);
+    console.log('Current transport:', socket.io.engine.transport.name);
+    console.log('Available transports:', socket.io.engine.transports);
 });
 
 const WagerDialog = ({ onConfirm, onCancel, maxCredits }) => {

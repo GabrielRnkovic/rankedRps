@@ -10,17 +10,24 @@ const gameManager = require('./games/gameManager');
 
 const app = express();
 const server = http.createServer(app);
-
-// CORS Configuration
 const io = socketIo(server, {
     cors: {
-        origin: ["https://ranked-rps-test.vercel.app", "http://localhost:3000"],
+        origin: "*",
         methods: ["GET", "POST"],
         credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization"]
-    }
+        transports: ['websocket', 'polling']
+    },
+    path: "/socket.io/",
+    serveClient: false,
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    upgradeTimeout: 30000,
+    agent: false,
+    cookie: false,
+    rejectUnauthorized: false
 });
 
+// CORS Configuration
 app.use(cors({
     origin: ["https://ranked-rps-test.vercel.app", "http://localhost:3000"],
     credentials: true,
@@ -352,6 +359,9 @@ io.on('connection', (socket) => {
             userSockets.delete(socket.id);
         }
         gameManager.leaveGame(socket);
+        if (waitingPlayer === socket.id) {
+            waitingPlayer = null;
+        }
     });
 
     socket.on('gameWon', async ({ userId, gameType, opponentId, isWinner }) => {
@@ -423,12 +433,6 @@ io.on('connection', (socket) => {
             waitingPlayer = socket.id;
             console.log('⌛ Added to waiting list:', socket.id);
             socket.emit('matchmaking', 'Waiting for opponent...');
-        }
-    });
-
-    socket.on('disconnect', () => {
-        if (waitingPlayer === socket.id) {
-            waitingPlayer = null;
         }
     });
 
@@ -860,8 +864,14 @@ app.post('/api/verify-token', async (req, res) => {
     }
 });
 
-// Start server
+// Update server startup and export
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+// Export the server instance instead of app
+module.exports = server;
