@@ -12,10 +12,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "*",
+        origin: ["http://localhost:3000", "https://your-frontend-domain.vercel.app"],
         methods: ["GET", "POST"],
-        credentials: true,
-        transports: ['websocket', 'polling']
+        allowedHeaders: ["my-custom-header"],
+        credentials: true
     },
     path: "/socket.io/",
     serveClient: false,

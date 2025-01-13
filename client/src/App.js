@@ -7,24 +7,29 @@ import GameModeSelect from './GameModeSelect';
 import Shop from './Shop';
 import { verifyToken } from './utils/auth';
 
-const socket = io(process.env.REACT_APP_API_URL, {
-    withCredentials: false, // Change this to false
-    transports: ['websocket', 'polling'],
+const socket = io(process.env.REACT_APP_API_URL || 'https://your-api-domain.vercel.app', {
+    withCredentials: true, // Change to true for production
+    transports: ['websocket'], // Try websocket only first
     reconnection: true,
-    reconnectionAttempts: Infinity,
+    reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
-    autoConnect: true,
-    path: '/socket.io/'
+    autoConnect: true
 });
 
-// Add better error handling
+// Add better error logging
 socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error);
-    console.log('Connection URL:', process.env.REACT_APP_API_URL);
-    console.log('Current transport:', socket.io.engine.transport.name);
-    console.log('Available transports:', socket.io.engine.transports);
+    console.error('Socket connection error details:', {
+        error: error.message,
+        description: error.description,
+        context: {
+            url: process.env.REACT_APP_API_URL,
+            transport: socket.io?.engine?.transport?.name,
+            protocol: window.location.protocol,
+            hostname: window.location.hostname
+        }
+    });
 });
 
 const WagerDialog = ({ onConfirm, onCancel, maxCredits }) => {
