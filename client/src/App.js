@@ -85,6 +85,8 @@ function App() {
   const [botThinking, setBotThinking] = useState(false);
   const [showBotChoices, setShowBotChoices] = useState(false);
   const [showWagerDialog, setShowWagerDialog] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   // Check authentication status on load
   useEffect(() => {
@@ -224,6 +226,7 @@ function App() {
     setChoice(selection);
     setRoundMessage(`You chose ${selection}!`);
     setDisplayResult(true);
+    setWaitingForOpponent(true); // Set to true when player makes a choice
     
     if (playingBot) {
       setBotThinking(true);
@@ -281,7 +284,6 @@ function App() {
   const createGameLink = () => {
     setShowGameModeSelect(true);
     setShowScoreboard(false); // Reset game board when creating new game
-    setGameStarted(false);
     setGameLink(''); // Clear any existing game link
   };
 
@@ -366,6 +368,7 @@ function App() {
       playerId: resultPlayerId,
       requiredWins 
   }) => {
+      setWaitingForOpponent(false); // Reset waiting state when round completes
       const personalizedResult = resultPlayerId === playerId ? 
           result : (result === 'You Win!' ? 'You Lose!' : result === 'You Lose!' ? 'You Win!' : 'Draw!');
       
@@ -453,6 +456,7 @@ function App() {
       setChoice(null);
       setOpponentChoice(null);
       setRoundMessage('New game started!');
+      setWaitingForOpponent(false); // Reset waiting state on game reset
     });
 
     socket.on('creditsUpdated', ({ amount }) => {
