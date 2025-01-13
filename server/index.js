@@ -12,7 +12,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: ["http://localhost:3000", "https://your-frontend-domain.vercel.app"],
+        origin: [process.env.CORS_ORIGIN, "http://localhost:3000"],
         methods: ["GET", "POST"],
         allowedHeaders: ["my-custom-header"],
         credentials: true
@@ -34,7 +34,7 @@ app.get('/health', (req, res) => {
 
 // CORS Configuration
 app.use(cors({
-    origin: ["https://ranked-rps-test.vercel.app", "http://localhost:3000"],
+    origin: [process.env.CORS_ORIGIN, "http://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
@@ -54,7 +54,7 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-mongoose.connect('mongodb+srv://gabrielrnkovic:wolves111@cluster0.pjivj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
@@ -652,7 +652,7 @@ app.post('/api/register', async (req, res) => {
 
         await user.save();
         
-        const token = jwt.sign({ id: user._id }, 'your-secret-key', { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(201).json({ 
             success: true,
             data: {
@@ -688,7 +688,7 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        const token = jwt.sign({ id: user._id }, 'your-secret-key', { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         
         return res.status(200).json({
             success: true,
@@ -712,7 +712,7 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/save', async (req, res) => {
     try {
         const { token, wins, skins } = req.body;
-        const decoded = jwt.verify(token, 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         await User.updateOne({ _id: decoded.id }, { wins, skins });
         res.json({ message: 'Data saved successfully' });
     } catch (error) {
@@ -727,14 +727,14 @@ const authenticateToken = (req, res, next) => {
     if (!token) return res.status(401).json({ message: 'Authentication required' });
 
     try {
-        const decoded = jwt.verify(token, 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         
         // Refresh token if it's close to expiring
         const tokenExp = decoded.exp * 1000; // Convert to milliseconds
         const now = Date.now();
         if (tokenExp - now < 300000) { // Less than 5 minutes left
-            const newToken = jwt.sign({ id: decoded.id }, 'your-secret-key', { expiresIn: '1h' });
+            const newToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
             res.setHeader('New-Token', newToken);
         }
         
@@ -840,7 +840,7 @@ app.post('/api/verify-token', async (req, res) => {
             return res.status(401).json({ valid: false });
         }
 
-        const decoded = jwt.verify(token, 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id)
             .select('-password')
             .lean();
@@ -850,7 +850,7 @@ app.post('/api/verify-token', async (req, res) => {
         }
 
         // Generate fresh token
-        const newToken = jwt.sign({ id: user._id }, 'your-secret-key', { expiresIn: '1h' });
+        const newToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         
         res.json({
             valid: true,
