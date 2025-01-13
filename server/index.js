@@ -12,10 +12,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: [process.env.CORS_ORIGIN, "http://localhost:3000"],
+        origin: [
+            'https://ranked-rps-client.vercel.app',
+            'http://localhost:3000'
+        ],
         methods: ["GET", "POST"],
-        allowedHeaders: ["my-custom-header"],
-        credentials: true
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: false
     },
     path: "/socket.io/",
     serveClient: false,
@@ -34,8 +37,11 @@ app.get('/health', (req, res) => {
 
 // CORS Configuration
 app.use(cors({
-    origin: [process.env.CORS_ORIGIN, "http://localhost:3000"],
-    credentials: true,
+    origin: [
+        'https://ranked-rps-client.vercel.app',
+        'http://localhost:3000'
+    ],
+    credentials: false,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));

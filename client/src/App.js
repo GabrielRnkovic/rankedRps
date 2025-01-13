@@ -7,29 +7,50 @@ import GameModeSelect from './GameModeSelect';
 import Shop from './Shop';
 import { verifyToken } from './utils/auth';
 
-const socket = io(process.env.REACT_APP_API_URL || 'https://your-api-domain.vercel.app', {
-    withCredentials: true, // Change to true for production
-    transports: ['websocket'], // Try websocket only first
+const socket = io(process.env.REACT_APP_API_URL, {
+    withCredentials: false, // Change back to false
+    transports: ['websocket', 'polling'], // Allow both websocket and polling
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
     autoConnect: true
 });
 
-// Add better error logging
+// Enhance error logging
 socket.on('connect_error', (error) => {
     console.error('Socket connection error details:', {
-        error: error.message,
+        message: error.message,
+        type: error.type,
         description: error.description,
         context: {
             url: process.env.REACT_APP_API_URL,
             transport: socket.io?.engine?.transport?.name,
             protocol: window.location.protocol,
-            hostname: window.location.hostname
+            hostname: window.location.hostname,
+            connected: socket.connected,
+            environment: process.env.NODE_ENV
         }
     });
+});
+
+// Add connection status logging
+socket.on('connect', () => {
+    console.log('Socket successfully connected:', {
+        id: socket.id,
+        url: process.env.REACT_APP_API_URL,
+        transport: socket.io?.engine?.transport?.name
+    });
+});
+
+// Add reconnection logging
+socket.io.on('reconnect_attempt', (attempt) => {
+    console.log('Attempting reconnection:', attempt);
+});
+
+socket.io.on('reconnect', (attempt) => {
+    console.log('Successfully reconnected after', attempt, 'attempts');
 });
 
 const WagerDialog = ({ onConfirm, onCancel, maxCredits }) => {
