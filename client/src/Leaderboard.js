@@ -15,7 +15,6 @@ function Leaderboard({ leaderboardData, onClose, permanent }) {
           </span>
         </div>
         {data.map((player, index) => {
-          const stats = getDisplayValues(player);
           return (
             <div key={index} className="leaderboard-item">
               <span className="rank">{index + 1}</span>
@@ -26,25 +25,6 @@ function Leaderboard({ leaderboardData, onClose, permanent }) {
         })}
       </div>
     );
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'overall':
-        return renderLeaderboardList(filteredData);
-      case 'bo3':
-        return renderLeaderboardList(filteredData);
-      case 'bo5':
-        return (
-          <div className="coming-soon">
-            <h3>Best of 5 Rankings</h3>
-            <p>Coming Soon!</p>
-            <p>This feature will be available in a future update.</p>
-          </div>
-        );
-      default:
-        return null;
-    }
   };
 
   useEffect(() => {
@@ -143,7 +123,6 @@ function Leaderboard({ leaderboardData, onClose, permanent }) {
             </span>
           </div>
           {filteredData.map((player, index) => {
-            const stats = getDisplayValues(player);
             return (
               <div key={index} className="leaderboard-item">
                 <span className="rank">{index + 1}</span>

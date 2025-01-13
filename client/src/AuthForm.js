@@ -9,29 +9,6 @@ function AuthForm({ onClose }) {
   });
   const [error, setError] = useState('');
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-        const response = await fetch('http://localhost:5000/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username: formData.username, password: formData.password }),
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            onClose(data.data); // Pass entire data object including credits
-        } else {
-            setError(data.message);
-        }
-    } catch (error) {
-        setError('Login failed. Please try again.');
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

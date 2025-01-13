@@ -60,20 +60,12 @@ function App() {
   const [user, setUser] = useState(null);
   const [choice, setChoice] = useState(null);
   const [opponentChoice, setOpponentChoice] = useState(null);
-  const [result, setResult] = useState('');
-  const [leaderboard, setLeaderboard] = useState([]);
   const [rounds, setRounds] = useState(3);
-  const [currentRound, setCurrentRound] = useState(0);
   const [playerScore, setPlayerScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
-  const [showGameModal, setShowGameModal] = useState(false);
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [gameLink, setGameLink] = useState('');
-  const [playerConnected, setPlayerConnected] = useState(false);
   const [gameId, setGameId] = useState(null);
-  const [connectedPlayers, setConnectedPlayers] = useState(0);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [roundMessage, setRoundMessage] = useState('');
   const [displayResult, setDisplayResult] = useState(false);
@@ -213,28 +205,23 @@ function App() {
 
   const startGame = (selectedRounds) => {
     setRounds(selectedRounds);
-    setCurrentRound(0);
     setPlayerScore(0);
     setOpponentScore(0);
-    setShowGameModal(true);
     setShowScoreboard(true);
     setGameOver(false);
-    setResult('');
     setRoundMessage('');
     setDisplayResult(false);
     setChoice(null);
     setOpponentChoice(null);
-    setWaitingForOpponent(false);
   };
 
   const handleChoice = (selection) => {
     // Prevent double picks and picks after game over
-    if (waitingForOpponent || gameOver || choice) {
+    if (gameOver || choice) {
       return;
     }
     
     setChoice(selection);
-    setWaitingForOpponent(true);
     setRoundMessage(`You chose ${selection}!`);
     setDisplayResult(true);
     
@@ -257,7 +244,6 @@ function App() {
     setPlayerScore(playerScore);
     setOpponentScore(opponentScore);
     setDisplayResult(true);
-    setWaitingForOpponent(false);
 
     if (gameOver) {
       setGameOver(true);
@@ -284,7 +270,6 @@ function App() {
     }
 
     console.log('Finding ranked opponent...');
-    setWaitingForOpponent(true);
     setShowScoreboard(true);
     setRoundMessage("Looking for opponent...");
     setGameOver(false);
@@ -293,23 +278,10 @@ function App() {
     socket.emit('findMatch', { ranked: true, rounds: 3 }); // Always best of 3 for ranked
   };
 
-  const handleRankedGameModeSelect = (selectedRounds) => {
-    setShowGameModeSelect(false);
-    console.log('Finding ranked opponent...');
-    setWaitingForOpponent(true);
-    setShowScoreboard(true);
-    setRoundMessage("Looking for opponent...");
-    setGameOver(false);
-    setChoice(null);
-    setOpponentChoice(null);
-    socket.emit('findMatch', { ranked: true, rounds: selectedRounds });
-  };
-
   const createGameLink = () => {
     setShowGameModeSelect(true);
     setShowScoreboard(false); // Reset game board when creating new game
     setGameStarted(false);
-    setWaitingForOpponent(false); // Set to false until game is actually created
     setGameLink(''); // Clear any existing game link
   };
 
@@ -331,7 +303,6 @@ function App() {
 
     // Set initial game state
     setShowScoreboard(true);
-    setWaitingForOpponent(true);
     setRoundMessage("Waiting for opponent to join...");
     
     // Copy link to clipboard with fallback
@@ -411,14 +382,12 @@ function App() {
         setTimeout(() => {
           setChoice(null);
           setOpponentChoice(null);
-          setWaitingForOpponent(false);
           setRoundMessage(`Next round! First to ${requiredWins} wins.`);
         }, 2000);
       }
   });
 
     socket.on('playerConnected', () => {
-      setConnectedPlayers((prev) => prev + 1);
       setNotification('A player has connected!');
       setTimeout(() => setNotification(''), 3000);
     });
@@ -426,9 +395,7 @@ function App() {
     socket.on('gameStart', () => {
       setNotification('Both players connected. Game started!');
       setTimeout(() => setNotification(''), 3000);
-      setShowGameModal(true);
       setShowScoreboard(true);
-      setGameStarted(true);
     });
 
     socket.on('opponentMadeChoice', () => {
@@ -441,7 +408,6 @@ function App() {
 
     socket.on('matchFound', ({ gameId: matchGameId, opponentId }) => {
       setGameId(matchGameId);
-      setWaitingForOpponent(false);
       setRoundMessage("Opponent found! Game starting...");
       startGame(3); // Best of 3
     });
@@ -465,7 +431,6 @@ function App() {
       console.log('Joining game by URL:', urlGameId);
       setGameId(urlGameId);
       setShowScoreboard(true);
-      setWaitingForOpponent(true);
       setRoundMessage("Joining game...");
       
       socket.emit('joinGame', { 
@@ -488,7 +453,6 @@ function App() {
       setChoice(null);
       setOpponentChoice(null);
       setRoundMessage('New game started!');
-      setWaitingForOpponent(false);
     });
 
     socket.on('creditsUpdated', ({ amount }) => {
@@ -528,17 +492,13 @@ function App() {
     socket.on('gameStart', () => {
       console.log('Game starting');
       startGame(3);
-      setGameStarted(true);
-      setWaitingForOpponent(false);
       setRoundMessage("Game started! Make your choice!");
     });
 
     socket.on('opponentDisconnected', () => {
       setNotification('Opponent disconnected!');
       setTimeout(() => setNotification(''), 3000);
-      setShowGameModal(false);
       setShowScoreboard(false);
-      setGameStarted(false);
       setGameOver(true);
     });
 
@@ -697,7 +657,6 @@ function App() {
     setShowWagerDialog(false);
     setWager(amount);
     setPlayingBot(true);
-    setWaitingForOpponent(false);
     setShowScoreboard(true);
     setRoundMessage("Starting game against bot...");
     setGameOver(false);
@@ -839,12 +798,11 @@ useEffect(() => {
   
       {gameLink && (
         <div className="game-link">
-          <p>
+          <p></p>
             Send this link to your friend:{' '}
             <a href={gameLink} target="_blank" rel="noopener noreferrer">
               {gameLink}
             </a>
-          </p>
         </div>
       )}
   
