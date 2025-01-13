@@ -27,6 +27,11 @@ const io = socketIo(server, {
     rejectUnauthorized: false
 });
 
+// Add this near the top after creating the app
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 // CORS Configuration
 app.use(cors({
     origin: ["https://ranked-rps-test.vercel.app", "http://localhost:3000"],
@@ -874,4 +879,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Export the server instance instead of app
-module.exports = server;
+module.exports = app;
