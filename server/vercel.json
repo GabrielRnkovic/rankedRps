@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "@mongodb-uri",
+    "JWT_SECRET": "@jwt-secret",
+    "NODE_ENV": "production"
+  }
+}
