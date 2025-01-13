@@ -14,19 +14,18 @@ const server = http.createServer(app);
 // CORS Configuration
 const io = socketIo(server, {
     cors: {
-        origin: process.env.NODE_ENV === 'production' 
-            ? ["https://ranked-rps-test.vercel.app"]
-            : ["http://localhost:3000"],
+        origin: ["https://ranked-rps-test.vercel.app", "http://localhost:3000"],
         methods: ["GET", "POST"],
-        credentials: true
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"]
     }
 });
 
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? "https://ranked-rps-test.vercel.app"
-        : "http://localhost:3000",
-    credentials: true
+    origin: ["https://ranked-rps-test.vercel.app", "http://localhost:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Middleware

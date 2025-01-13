@@ -7,13 +7,20 @@ import GameModeSelect from './GameModeSelect';
 import Shop from './Shop';
 import { verifyToken } from './utils/auth';
 
-const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+const socket = io(process.env.REACT_APP_API_URL, {
   withCredentials: true,
-  transports: ['websocket'],
+  transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
-  reconnectionAttempts: 5
+  reconnectionAttempts: 5,
+  autoConnect: true
+});
+
+// Add connection error logging
+socket.on('connect_error', (error) => {
+  console.error('Socket connection error:', error);
+  console.log('Connection URL:', process.env.REACT_APP_API_URL);
 });
 
 const WagerDialog = ({ onConfirm, onCancel, maxCredits }) => {
