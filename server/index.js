@@ -33,13 +33,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: "*",
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -47,15 +41,16 @@ app.use(cors({
 
 const io = socketIo(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: "*",
         methods: ["GET", "POST", "OPTIONS"],
-        credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization"]
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
     },
     transports: ['websocket', 'polling'],
     path: "/socket.io/",
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    allowEIO3: true
 });
 
 // Add this near the top after creating the app
