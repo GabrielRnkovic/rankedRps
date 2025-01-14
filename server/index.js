@@ -62,20 +62,16 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
+const MONGODB_URI = 'mongodb+srv://gabrielrnkovic:wolves111@cluster0.pjivj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     connectTimeoutMS: 10000,
 }).then(() => {
-    // Add more detailed connection logging
-    const connection = mongoose.connection;
-    console.log('Connected to MongoDB');
-    console.log('Database name:', connection.name);
-    console.log('Host:', connection.host);
-    console.log('Port:', connection.port);
+    console.log('✅ Connected to MongoDB Atlas');
 }).catch(err => {
-    console.error('MongoDB connection error:', err);
+    console.error('❌ MongoDB connection error:', err);
 });
 
 // Add connection error handling
@@ -104,7 +100,7 @@ const UserSchema = new mongoose.Schema({
     lossesBO3: { type: Number, default: 0 },
     lossesBO5: { type: Number, default: 0 },
     skins: { type: Array, default: [] }
-});
+}, { timestamps: true }); // Add timestamps
 
 const User = mongoose.model('User', UserSchema);
 
@@ -653,11 +649,25 @@ app.post('/api/register', async (req, res) => {
             username, 
             email, 
             password: hashedPassword,
-            credits: 100 // Ensure initial credits are set
+            credits: 100,
+            wins: 0,
+            losses: 0,
+            winsBO3: 0,
+            winsBO5: 0,
+            lossesBO3: 0,
+            lossesBO5: 0
         });
 
         await user.save();
         
+        // Emit leaderboard update after new user registration
+        const updatedLeaderboard = await User.find()
+            .select('username wins losses winsBO3 winsBO5 lossesBO3 lossesBO5 credits')
+            .sort({ wins: -1 })
+            .limit(50)
+            .lean();
+        io.emit('leaderboardUpdate', updatedLeaderboard);
+
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(201).json({ 
             success: true,
@@ -804,19 +814,17 @@ app.post('/api/credits/update', authenticateToken, async (req, res) => {
     }
 });
 
-// Update the leaderboard route
+// Update the leaderboard route with simpler query
 app.get('/api/leaderboard', async (req, res) => {
     try {
         console.log('Fetching leaderboard data...');
-        const topPlayers = await User.find({})
+        
+        const topPlayers = await User.find()
             .select('username wins losses winsBO3 winsBO5 lossesBO3 lossesBO5 credits')
             .sort({ wins: -1 })
-            .limit(50)
-            .lean();
+            .limit(50);
 
-        console.log(`Found ${topPlayers.length} players for leaderboard`);
-        
-        // Transform the data to ensure it's valid
+        // Transform the data to ensure all fields exist
         const sanitizedPlayers = topPlayers.map(player => ({
             username: player.username,
             wins: player.wins || 0,
@@ -828,13 +836,16 @@ app.get('/api/leaderboard', async (req, res) => {
             credits: player.credits || 0
         }));
 
+        console.log(`Found ${sanitizedPlayers.length} players`);
+        if (sanitizedPlayers.length > 0) {
+            console.log('Sample player:', sanitizedPlayers[0]);
+        }
+
         res.json(sanitizedPlayers);
+        
     } catch (error) {
         console.error('Leaderboard error:', error);
-        res.status(500).json({ 
-            message: 'Error fetching leaderboard',
-            error: error.message 
-        });
+        res.status(500).json([]);  // Return empty array instead of error
     }
 });
 
@@ -875,14 +886,27 @@ app.post('/api/verify-token', async (req, res) => {
     }
 });
 
+// Add this route near your other routes
+app.get('/api/check-jwt-config', (req, res) => {
+    const jwtSecretExists = !!process.env.JWT_SECRET;
+    const jwtSecretLength = process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0;
+    
+    res.json({
+        jwtConfigured: jwtSecretExists,
+        secretLength: jwtSecretLength,
+        environment: process.env.NODE_ENV
+    });
+});
+
 // Update server startup and export
 const PORT = process.env.PORT || 5000;
 
+// Only start the server if we're not in a serverless environment
 if (process.env.NODE_ENV !== 'production') {
     server.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });
 }
 
-// Export the server instance instead of app
-module.exports = app;
+// Export for Vercel serverless deployment
+module.exports = server;
