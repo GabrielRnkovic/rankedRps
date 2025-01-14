@@ -12,12 +12,18 @@ const gameManager = require('./games/gameManager');
 
 const app = express();
 const server = http.createServer(app);
+
+const allowedOrigins = [
+    'https://ranked-rps-client-b759xddq4-gabrielrnkovics-projects.vercel.app',
+    'http://localhost:3000'
+];
+
 const io = socketIo(server, {
     cors: {
-        origin: '*',  // For testing. Update to specific origins later
-        methods: ["GET", "POST"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: true
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "OPTIONS"],
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"]
     },
     transports: ['websocket', 'polling'],
     allowEIO3: true,
@@ -31,7 +37,14 @@ app.get('/health', (req, res) => {
 
 // CORS Configuration
 app.use(cors({
-    origin: '*',  // For testing. Update to specific origins later
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.log('Blocked origin:', origin);
+            callback(null, false);
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
@@ -884,6 +897,16 @@ app.get('/api/check-jwt-config', (req, res) => {
         jwtConfigured: jwtSecretExists,
         secretLength: jwtSecretLength,
         environment: process.env.NODE_ENV
+    });
+});
+
+// Add error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
