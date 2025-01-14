@@ -9,15 +9,19 @@
   "routes": [
     {
       "src": "/socket.io/(.*)",
-      "dest": "/index.js"
+      "dest": "index.js"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/index.js"
+      "dest": "index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.js"
+      "dest": "index.js"
     }
-  ]
+  ],
+  "regions": ["cdg1"],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

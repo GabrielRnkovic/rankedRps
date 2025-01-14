@@ -14,22 +14,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: [
-            'https://ranked-rps-client-b759xddq4-gabrielrnkovics-projects.vercel.app',
-            'http://localhost:3000'
-        ],
+        origin: '*',  // For testing. Update to specific origins later
         methods: ["GET", "POST"],
         allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: false
+        credentials: true
     },
-    path: "/socket.io/",
-    serveClient: false,
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    upgradeTimeout: 30000,
-    agent: false,
-    cookie: false,
-    rejectUnauthorized: false
+    transports: ['websocket', 'polling'],
+    path: "/socket.io/"
 });
 
 // Add this near the top after creating the app
@@ -39,11 +30,8 @@ app.get('/health', (req, res) => {
 
 // CORS Configuration
 app.use(cors({
-    origin: [
-        'https://ranked-rps-client-b759xddq4-gabrielrnkovics-projects.vercel.app',
-        'http://localhost:3000'
-    ],
-    credentials: false,
+    origin: '*',  // For testing. Update to specific origins later
+    credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
