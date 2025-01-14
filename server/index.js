@@ -20,6 +20,7 @@ const io = socketIo(server, {
         credentials: true
     },
     transports: ['websocket', 'polling'],
+    allowEIO3: true,
     path: "/socket.io/"
 });
 
