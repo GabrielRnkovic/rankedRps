@@ -15,8 +15,8 @@ const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
         origin: [
-            'https://ranked-rps.vercel.app',     // Your client URL
-            'http://localhost:3000'              // Local development
+            'https://ranked-rps-client-b759xddq4-gabrielrnkovics-projects.vercel.app',
+            'http://localhost:3000'
         ],
         methods: ["GET", "POST"],
         allowedHeaders: ["Content-Type", "Authorization"],
@@ -40,8 +40,8 @@ app.get('/health', (req, res) => {
 // CORS Configuration
 app.use(cors({
     origin: [
-        'https://ranked-rps.vercel.app',     // Your client URL
-        'http://localhost:3000'              // Local development
+        'https://ranked-rps-client-b759xddq4-gabrielrnkovics-projects.vercel.app',
+        'http://localhost:3000'
     ],
     credentials: false,
     methods: ["GET", "POST", "OPTIONS"],
