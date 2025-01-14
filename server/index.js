@@ -18,6 +18,33 @@ const allowedOrigins = [
     'http://localhost:3000'
 ];
 
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 const io = socketIo(server, {
     cors: {
         origin: allowedOrigins,
@@ -26,8 +53,9 @@ const io = socketIo(server, {
         allowedHeaders: ["Content-Type", "Authorization"]
     },
     transports: ['websocket', 'polling'],
-    allowEIO3: true,
-    path: "/socket.io/"
+    path: "/socket.io/",
+    pingTimeout: 60000,
+    pingInterval: 25000
 });
 
 // Add this near the top after creating the app
@@ -59,6 +87,16 @@ app.use((req, res, next) => {
         method: req.method,
         path: req.path,
         body: req.body
+    });
+    next();
+});
+
+// Add request logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`, {
+        headers: req.headers,
+        body: req.body,
+        query: req.query
     });
     next();
 });

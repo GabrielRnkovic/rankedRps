@@ -1,12 +1,12 @@
 const config = {
-    SERVER_URL: process.env.NODE_ENV === 'production' 
-        ? 'https://ranked-c55ffwvpw-gabrielrnkovics-projects.vercel.app'
-        : 'http://localhost:5000',
+    SERVER_URL: process.env.REACT_APP_SERVER_URL || 'http://localhost:5000',
     SOCKET_OPTIONS: {
-        transports: ['websocket'],
-        forceNew: true,
-        reconnection: true,
-        timeout: 10000
+        transports: ['websocket', 'polling'],
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        autoConnect: true,
+        withCredentials: true,
+        path: '/socket.io/'
     }
 };
 
